@@ -16,7 +16,24 @@
 
 <div class="col-sm-10">
 <input id="message-input" class="form-control" />
+
+
+<button id="gif-button">GIFPHY</button>
+<button id="shrug-button">¯\_(ツ)_/¯</button>
+<button id="shrug-button">凸(｀0´)凸</button>
+<button id="shrug-button">(҂⌣̀_⌣́)</button>
+<button id="shrug-button">ヾ(ﾒ｀･д･´)ﾉﾞ</button>
+
+<button id="shrug-button">(╯°□°）╯︵ ┻━┻</button>
+<button id="shrug-button">(۶ૈ ᵒ̌ Дᵒ̌)۶ૈ=͟͟͞͞ </button>
+<button id="shrug-button">((╬ಠิ﹏ಠิ))</button>
+<button id="shrug-button">Ƒ ư ɕ ƙ (╬ﾟ◥益◤ﾟ) ╬ﾟ</button>
+<button id="shrug-button">ＳΟЯЯΥ＿φ（･益ｑ｡｀)･ﾟ･ｏ｡</button>
+<%# <button id="shrug-button"> </button>
+<button id="shrug-button"> </button>
+<button id="shrug-button"> </button>
+<button id="shrug-button"> </button> %>
 </div>
 </div>
 </div>
-</div>
+</div>s
