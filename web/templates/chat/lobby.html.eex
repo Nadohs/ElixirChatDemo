@@ -29,11 +29,11 @@
 <button id="shrug-button">((╬ಠิ﹏ಠิ))</button>
 <button id="shrug-button">Ƒ ư ɕ ƙ (╬ﾟ◥益◤ﾟ) ╬ﾟ</button>
 <button id="shrug-button">ＳΟЯЯΥ＿φ（･益ｑ｡｀)･ﾟ･ｏ｡</button>
-<%# <button id="shrug-button"> </button>
-<button id="shrug-button"> </button>
-<button id="shrug-button"> </button>
-<button id="shrug-button"> </button> %>
+	<%# <button id="shrug-button"> </button>
+	<button id="shrug-button"> </button>
+	<button id="shrug-button"> </button>
+	<button id="shrug-button"> </button> %>
 </div>
 </div>
 </div>
-</div>s
+</div>

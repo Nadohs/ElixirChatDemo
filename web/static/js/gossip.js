@@ -1,3 +1,5 @@
+//MARK: - Network Request Giphy -
+
 var randomGif = function(query) {
 	return "http://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC&rating=pg&tag=" + query
 }
@@ -23,6 +25,8 @@ function gifImgFromResponse(response) {
 	return img
 }
 
+//MARK: - Time Formatting -
+
 function getFormattedTime() {
     var date = new Date();
 		var minutes = date.getMinutes().toString()
@@ -33,6 +37,116 @@ function getFormattedTime() {
     	return str
 }
 
+//MARK: - Gossip class -
+class Gossip {
+	
+	static init(socket) {
+		var $status = $("#status")
+		var $messages = $("#messages")
+		var $input = $("#message-input")
+		var $username = $("#username")
+		var $button = $("#shrug-button")
+		var $gifButton = $("#gif-button")
+		
+		socket.onOpen( ev => console.log("OPEN", ev))
+		socket.onError( ev => console.log("ERROR", ev))
+		socket.onClose( e => console.log("CLOSE", e))
+		
+		var chan = socket.channel("rooms:lobby", {})
+		chan.join()
+			.receive("ignore", () => console.log("auth error"))
+			.receive("ok", () => console.log("join ok"))
+			.receive("timeout", () => console.log("Connection interruption"))
+		chan.onError( e => console.log("something went wrong", e))
+		chan.onClose( e => console.log("channel closed", e))
+		
+		
+		//MARK: - button actions -
+		
+		$gifButton.off("click").on("click", e => {
+			var path = randomGif($input.val().queryFormat())
+			httpGetAsync(path, function(result) {
+				
+				var img = gifImgFromResponse(result)
+				img["input"] = $input.val()
+				var url = img.url
+				if (url == undefined) {
+					return
+				}
+				var style = "width:" + img.width + "px;height:" + img.height + "px;"
+				img.style = style
+				chan.push("new:msg", {
+						user: $username.val().appendDate(),
+						body: JSON.stringify(img), 
+					}, 10000)
+			})
+		})
+
+		$button.off("click").on("click", e => {
+				var buttonTitle = e.target.textContent
+				chan.push("new:msg", {user: $username.val().appendDate(), body:buttonTitle}, 10000)
+		})
+
+		
+		$input.off("keypress").on("keypress", e => {
+			if(e.keyCode == 13) {
+				console.log("keyperssed")
+				chan.push("new:msg", {user: $username.val().appendDate(), body: $input.val()}, 10000)
+				$input.val("")
+			}
+		})
+		
+		
+		//MARK: - websocket recievers -
+		
+		chan.on("new:msg", msg => {
+			if (!msg.body.isJSON()) {
+				$messages.append(this.messageTemplate(msg))
+			} else {
+				var data = JSON.parse(msg.body)
+				$messages.append(this.gifTemplate(data))
+				msg.body = data.input
+				$messages.append(this.messageTemplate(msg))
+			}
+			scrollTo(0, document.body.scrollHeight)
+		})
+		
+		chan.on("user:entered", msg => {
+			var username = this.sanitize(msg.user || "anonymous")
+			$messages.append(`<br/><i>[${username} entered]</i>`)
+		})
+		
+		//MARK: -
+	}
+	
+	static sanitize(html) { return $("<div/>").text(html).html() }
+	
+	static gifTemplate(data) {
+		var url = data.url
+		var style = data.style
+		return (`<br><img src=${url} alt='' style=${style}></img><br>`)
+	}
+
+	static messageTemplate(msg) {
+		let username = this.sanitize(msg.user || "anonymous")
+		let body = this.sanitize(msg.body)
+		return (`<p><a href='#'>[${username}]</a>&nbsp; ${body}</p>`)
+	}
+}
+
+export default Gossip
+
+
+//MARK: - Prototye Extensions -
+
+String.prototype.isJSON = function(str) {
+    try {
+        JSON.parse(this);
+    } catch (e) {
+        return false
+    }
+    return true
+}
 
 Number.prototype.monthStr = function () {
 	switch (this) {
@@ -71,93 +185,3 @@ String.prototype.queryFormat = function () {
 	}
 	return chars.join("+")
 }
-
-class Gossip {
-	
-	static init(socket) {
-		var $status = $("#status")
-		var $messages = $("#messages")
-		var $input = $("#message-input")
-		var $username = $("#username")
-		var $button = $("#shrug-button")
-		var $gifButton = $("#gif-button")
-		
-		socket.onOpen( ev => console.log("OPEN", ev))
-		socket.onError( ev => console.log("ERROR", ev))
-		socket.onClose( e => console.log("CLOSE", e))
-		
-		var chan = socket.channel("rooms:lobby", {})
-		chan.join()
-			.receive("ignore", () => console.log("auth error"))
-			.receive("ok", () => console.log("join ok"))
-			.receive("timeout", () => console.log("Connection interruption"))
-		chan.onError( e => console.log("something went wrong", e))
-		chan.onClose( e => console.log("channel closed", e))
-		
-		$gifButton.off("click").on("click", e => {
-			var path = randomGif($input.val().queryFormat())
-			httpGetAsync(path, function(result) {
-				
-				var img = gifImgFromResponse(result)
-				var url = img.url
-				if (url == undefined) {
-					return
-				}
-				chan.push("new:msg", {user: $username.val().appendDate(), body: $input.val()}, 10000)
-				var style = "width:" + img.width + "px;height:" + img.height + "px;"
-				$messages.append(`<br><img src=${url} alt='' style=${style}></img><br>`)
-				
-//				$messages.append(`<br/><i>[${username} entered]</i>`)
-			})
-		})
-
-		$button.off("click").on("click", e => {
-				var buttonTitle = e.target.textContent
-				chan.push("new:msg", {user: $username.val().appendDate(), body:buttonTitle}, 10000)
-		})
-
-		
-		$input.off("keypress").on("keypress", e => {
-			if(e.keyCode == 13) {
-				console.log("keyperssed")
-				chan.push("new:msg", {user: $username.val().appendDate(), body: $input.val()}, 10000)
-				$input.val("")
-			}
-		})
-		
-		chan.on("new:msg", msg => {
-			$messages.append(this.messageTemplate(msg))
-			scrollTo(0, document.body.scrollHeight)
-		})
-		
-//		chan.on("new:gif", msg => {
-//			var	 username = this.sanitize("gif")
-//			$messages.append(`<br/><i>[${username} entered]</i>`)
-//			scrollTo(0, document.body.scrollHeight)
-//		})
-		
-		chan.on("user:entered", msg => {
-			var username = this.sanitize(msg.user || "anonymous")
-			$messages.append(`<br/><i>[${username} entered]</i>`)
-		})
-	}
-	
-	static sanitize(html) { return $("<div/>").text(html).html() }
-	
-	static gifTemplate(img) {
-		$messages.append(`<br/><i>[${username} entered]</i>`)
-		//let username = this.sanitize(msg.user || "anonymous")
-//		let body = this.sanitize(msg.body)
-		var url = img.url
-		var style = "width:" + img.width + "px;height:" + img.height + "px;"
-		$messages.append(`<img src=${url} alt='' style=${style}></img>`)
-	}
-
-	static messageTemplate(msg) {
-		let username = this.sanitize(msg.user || "anonymous")
-		let body = this.sanitize(msg.body)
-		return (`<p><a href='#'>[${username}]</a>&nbsp; ${body}</p>`)
-	}
-}
-
-export default Gossip
